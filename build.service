@@ -1,0 +1,6 @@
+[Unit]
+Description=Check for Minecraft server updates and rebuild the container
+
+[Service]
+Type=oneshot
+ExecStart=%PATH%/build.sh

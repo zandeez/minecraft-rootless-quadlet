@@ -1,0 +1,9 @@
+[Unit]
+Description=Periodically check for Minecraft updates and build a new container image
+
+[Timer]
+Unit=build.service
+OnCalendar=*-*-* 05:00:00
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,16 @@
+[Unit]
+Description=Minecraft Server
+
+[Container]
+Image=localhost/minecraft_server:latest
+PublishPort=25565:25565/tcp
+PublishPort=25575:25575/tcp
+Volume=%PATH%/data:/data:rw,Z,U
+AutoUpdate=local
+UserNS=keep-id
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
