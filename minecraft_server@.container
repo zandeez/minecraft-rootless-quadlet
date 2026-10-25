@@ -1,0 +1,18 @@
+[Unit]
+Description=Minecraft Server (%i)
+
+[Container]
+Image=localhost/minecraft_server:latest
+# Ports are instance-specific and come from a per-instance drop-in
+# (minecraft_server@%i.container.d/ports.conf), not from %i itself --
+# %i only carries one value per instance, but each instance needs two
+# independent host ports (game + rcon).
+Volume=%PATH%/instances/%i/data:/data:rw,Z,U
+AutoUpdate=local
+UserNS=keep-id
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

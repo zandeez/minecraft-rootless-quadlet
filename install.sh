@@ -5,7 +5,7 @@ CWD="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 NAME="${1:-default}"
 GAME_PORT="${2:-25565}"
 RCON_PORT="${3:-25575}"
-UNIT_NAME="minecraft_server-${NAME}"
+UNIT_NAME="minecraft_server@${NAME}"
 
 echo Installing instance \'$NAME\' \(game port $GAME_PORT, rcon port $RCON_PORT\) to $CWD ...
 
@@ -13,18 +13,27 @@ pushd "$CWD" > /dev/null
 
 echo Creating directories ...
 
-mkdir -p ~/.config/systemd/user/ ~/.config/containers/systemd/ "instances/${NAME}/data"
+QUADLET_DIR="${HOME}/.config/containers/systemd"
+DROPIN_DIR="${QUADLET_DIR}/minecraft_server@${NAME}.container.d"
+mkdir -p ~/.config/systemd/user/ "$QUADLET_DIR" "$DROPIN_DIR" "instances/${NAME}/data"
 
 echo Creating unit files ...
 
 sed "s|%PATH%|${CWD}|" build.service > ~/.config/systemd/user/build.service
 cp build.timer ~/.config/systemd/user/
-sed \
-  -e "s|%PATH%|${CWD}|g" \
-  -e "s|%NAME%|${NAME}|g" \
-  -e "s|%GAME_PORT%|${GAME_PORT}|g" \
-  -e "s|%RCON_PORT%|${RCON_PORT}|g" \
-  minecraft_server.container.template > "${HOME}/.config/containers/systemd/${UNIT_NAME}.container"
+
+# The template itself is the same for every instance -- only %i (the
+# instance name) varies, and systemd/Quadlet substitutes that at
+# generate time, not here.
+sed "s|%PATH%|${CWD}|g" "minecraft_server@.container" > "${QUADLET_DIR}/minecraft_server@.container"
+
+# Ports can't come from %i alone (one specifier, two ports needed), so
+# each instance gets its own drop-in overriding/adding PublishPort.
+cat > "${DROPIN_DIR}/ports.conf" <<EOF
+[Container]
+PublishPort=${GAME_PORT}:25565/tcp
+PublishPort=${RCON_PORT}:25575/tcp
+EOF
 
 echo Reloading SystemD and enabling services ...
 
